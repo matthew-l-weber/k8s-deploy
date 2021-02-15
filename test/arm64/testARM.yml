@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kube-verify
+  namespace: kube-verify
+  labels:
+    env: test
+spec:
+  containers:
+  - name: kube-verify
+    image: quay.io/clcollins/kube-verify:01
+    imagePullPolicy: IfNotPresent
+    ports:
+    - containerPort: 80
+  nodeSelector:
+    kubernetes.io/arch: arm64
