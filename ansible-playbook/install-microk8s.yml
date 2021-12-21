@@ -1,0 +1,38 @@
+- hosts: kluster
+  become: true
+  become_user: root
+  tasks:
+    - name: Install base pkgs
+      apt:
+        name: snapd
+        state: present
+        update_cache: true
+
+    - name: Install Microk8s Snap
+      snap:
+        name: 'microk8s'
+        channel: '1.19/stable'
+        classic: yes
+
+    - name: Microk8s - Allow pod to pod, pod to internet
+      command: "{{ item }}"
+      with_items:
+        - ufw allow in on cni0
+        - ufw allow out on cni0
+        - ufw default allow routed
+
+
+- hosts: node02
+  become: true
+  become_user: root
+  tasks:
+    - name: Microk8s - Enable DNS, Dash, Storage, Ingress
+      command: "{{ item }}"
+      with_items:
+        - microk8s.enable dns dashboard storage ingress
+
+#token=$(microk8s kubectl -n kube-system get secret | grep default-token | cut -d " " -f1)
+#microk8s kubectl -n kube-system describe secret $token
+#microk8s add-node
+#ssh ubuntu@node02 -L 10443:10.152.183.230:443
+#ansible node01 -a "microk8s join 192.168.1.71:25000/8a38515f395f8ef5b56464db1aadd6bb"
