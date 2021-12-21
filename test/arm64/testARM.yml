@@ -1,16 +1,47 @@
+---
 apiVersion: v1
-kind: Pod
+kind: Namespace
+metadata:
+  labels:
+    kubernetes.io/metadata.name: kube-verify
+  name: kube-verify
+spec:
+---
+apiVersion: apps/v1
+kind: Deployment
 metadata:
   name: kube-verify
   namespace: kube-verify
   labels:
-    env: test
+    app: kube-verify
 spec:
-  containers:
-  - name: kube-verify
-    image: quay.io/clcollins/kube-verify:01
-    imagePullPolicy: IfNotPresent
-    ports:
-    - containerPort: 80
-  nodeSelector:
-    kubernetes.io/arch: arm64
+  replicas: 3
+  selector:
+    matchLabels:
+      app: kube-verify
+  template:
+    metadata:
+      labels:
+        app: kube-verify
+    spec:
+      containers:
+      - name: nginx
+        image: quay.io/clcollins/kube-verify:01
+        ports:
+        - containerPort: 8080
+      tolerations:
+      - effect: NoSchedule
+        operator: Exists
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kube-verify
+  namespace: kube-verify
+spec:
+  selector:
+    app: kube-verify
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
